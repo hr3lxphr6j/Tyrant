@@ -12,6 +12,8 @@ _name_ = 'Zombie'
 _version_ = '0.1'
 
 ffmpeg_args = '-y -c:v libx265 -crf 22 -preset faster -c:a aac -b:a 192k -map_metadata -1 -max_muxing_queue_size 4096'
+report_enable = True
+report_db = ''
 
 
 def parse_args():
@@ -36,6 +38,13 @@ def parse_args():
                         action="store_true",
                         help='only show command without execute',
                         default=False)
+    parser.add_argument('--disable-report',
+                        action='store_true',
+                        help='do not store info to Sqlite DB',
+                        default=False)
+    parser.add_argument('--report',
+                        help='Sqlite DB name, will create if not exist',
+                        default='reports.db')
     parser.add_argument('file', nargs='+', help='target file or directory')
     return parser.parse_args()
 
@@ -76,10 +85,36 @@ def call(command):
     subprocess.call(command)
 
 
+def write_result_to_db(input_file, output_file, start_time, finish_time):
+    if not report_enable:
+        return
+    with sqlite3.connect(report_db) as db:
+        db.execute('''CREATE TABLE IF NOT EXISTS result(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_name TEXT NOT NULL,
+                before_size INTEGER NOT NULL,
+                after_size  INTEGER NOT NULL,
+                start_time_unix INTEGER NOT NULL,
+                finish_time_unix INTEGER NOT NULL);''')
+        db.execute('''INSERT INTO result (
+                file_name, 
+                before_size, 
+                after_size, 
+                start_time_unix, 
+                finish_time_unix
+            ) VALUES (?,?,?,?,?)''', (
+            input_file,
+            os.path.getsize(input_file),
+            os.path.getsize(output_file),
+            start_time,
+            finish_time))
+        db.commit()
+
+
 def record(fn):
     @functools.wraps(fn)
     def wrapper(*args, **kw):
-        debug = kw.get('debug') or False
+        debug = (kw.get('debug') or False)
         if debug:
             return fn(*args, **kw)
         input_file = kw.get('input')
@@ -87,29 +122,8 @@ def record(fn):
         start_time = int(time.time())
         result = fn(*args, **kw)
         finish_time = int(time.time())
-        with sqlite3.connect('report.db') as db:
-            db.execute('''CREATE TABLE IF NOT EXISTS result(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                file_name TEXT NOT NULL,
-                before_size INTEGER NOT NULL,
-                after_size  INTEGER NOT NULL,
-                start_time_unix INTEGER NOT NULL,
-                finish_time_unix INTEGER NOT NULL
-            );''')
-            db.commit()
-            db.execute('''INSERT INTO result (
-                file_name, 
-                before_size, 
-                after_size, 
-                start_time_unix, 
-                finish_time_unix
-            ) VALUES (?,?,?,?,?)''', (
-                input_file,
-                os.path.getsize(input_file),
-                os.path.getsize(output_file),
-                start_time,
-                finish_time))
-            db.commit()
+        write_result_to_db(input_file,
+                           output_file, start_time, finish_time)
         return result
     return wrapper
 
@@ -128,6 +142,10 @@ def call_ffmpeg(input, output, arg_strs, debug=False):
 
 def main():
     args = parse_args()
+    global report_enable
+    report_enable = not args.disable_report
+    global report_db
+    report_db = args.report
     if args.debug:
         print(args)
 
