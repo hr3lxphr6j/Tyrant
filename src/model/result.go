@@ -1,7 +1,10 @@
 package model
 
 import (
+	"encoding/json"
 	"time"
+
+	"Tyrant/src/utils"
 )
 
 /*
@@ -21,4 +24,25 @@ type Result struct {
 	AfterSize  int       `xorm:"after_size",json:"after_size"`
 	StartTime  time.Time `xorm:"start_time_unix",json:"start_time"`
 	FinishTime time.Time `xorm:"finish_time_unix",json:"finish_time"`
+}
+
+func (r *Result) MarshalJSON() ([]byte, error) {
+	s := struct {
+		ID         int    `json:"id"`
+		FileName   string `json:"file_name"`
+		BeforeSize string `json:"before_size"`
+		AfterSize  string `json:"after_size"`
+		StartTime  string `json:"start_time"`
+		FinishTime string `json:"finish_time"`
+		Duration   string `json:"duration"`
+	}{
+		ID:         r.ID,
+		FileName:   r.FileName,
+		BeforeSize: utils.HumanSize(uint64(r.BeforeSize)),
+		AfterSize:  utils.HumanSize(uint64(r.AfterSize)),
+		StartTime:  r.StartTime.String(),
+		FinishTime: r.FinishTime.String(),
+		Duration:   r.FinishTime.Sub(r.StartTime).String(),
+	}
+	return json.Marshal(s)
 }
