@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"Tyrant/src/utils"
@@ -28,21 +29,23 @@ type Result struct {
 
 func (r *Result) MarshalJSON() ([]byte, error) {
 	s := struct {
-		ID         int    `json:"id"`
-		FileName   string `json:"file_name"`
-		BeforeSize string `json:"before_size"`
-		AfterSize  string `json:"after_size"`
-		StartTime  string `json:"start_time"`
-		FinishTime string `json:"finish_time"`
-		Duration   string `json:"duration"`
+		ID            int    `json:"id"`
+		FileName      string `json:"file_name"`
+		BeforeSize    string `json:"before_size"`
+		AfterSize     string `json:"after_size"`
+		CompressRatio string `json:"compress_ratio"`
+		StartTime     string `json:"start_time"`
+		FinishTime    string `json:"finish_time"`
+		Duration      string `json:"duration"`
 	}{
-		ID:         r.ID,
-		FileName:   r.FileName,
-		BeforeSize: utils.HumanSize(uint64(r.BeforeSize)),
-		AfterSize:  utils.HumanSize(uint64(r.AfterSize)),
-		StartTime:  r.StartTime.String(),
-		FinishTime: r.FinishTime.String(),
-		Duration:   r.FinishTime.Sub(r.StartTime).String(),
+		ID:            r.ID,
+		FileName:      r.FileName,
+		BeforeSize:    utils.HumanSize(uint64(r.BeforeSize)),
+		AfterSize:     utils.HumanSize(uint64(r.AfterSize)),
+		CompressRatio: fmt.Sprintf("%.2f%%", float64(r.AfterSize)/float64(r.BeforeSize)*100),
+		StartTime:     r.StartTime.String(),
+		FinishTime:    r.FinishTime.String(),
+		Duration:      r.FinishTime.Sub(r.StartTime).String(),
 	}
 	return json.Marshal(s)
 }
