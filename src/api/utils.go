@@ -10,7 +10,7 @@ func loadIntReqParams(dst *int, r *http.Request, name string) {
 	if dst == nil || r == nil || name == "" {
 		return
 	}
-	num, err := strconv.Atoi(r.URL.Query().Get("page"))
+	num, err := strconv.Atoi(r.URL.Query().Get(name))
 	if err != nil {
 		return
 	}
