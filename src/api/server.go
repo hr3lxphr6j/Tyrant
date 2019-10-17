@@ -1,3 +1,5 @@
+//go:generate statik -src=./static
+
 package api
 
 import (
@@ -7,7 +9,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
 
+	_ "Tyrant/src/api/statik"
 	"Tyrant/src/service"
 )
 
@@ -69,6 +73,13 @@ func (s *Server) initRouterMap() {
 			})
 		},
 	)
+
+	statikFS, err := fs.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	s.router.Handle("/", http.FileServer(statikFS))
+
 	r := s.router.PathPrefix("/api").Subrouter()
 	r.HandleFunc("/result", s.handleGetResult).Methods(http.MethodGet)
 }

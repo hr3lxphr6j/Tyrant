@@ -1,0 +1,127 @@
+<!--
+ * @Author: Jmeow
+ * @Date: 2019-09-29 20:01:11
+ * @Description: 
+ -->
+<!DOCTYPE html>
+<script>
+    const Http = new XMLHttpRequest();
+    let page = 1;
+    let maxPage = 1;
+
+    sendRequest();
+
+    Http.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            let response = Http.responseText;
+            if (response == null) {
+                return;
+            }
+            let rspData = JSON.parse(response);
+            if (!rspData.data) {
+                return;
+            }
+
+            //清空表格之前所有行
+            deleteAllRow("data-form");
+            //最大页
+            maxPage = rspData.page_count;
+
+            document.getElementById("page").innerHTML = "当前页：" + page;
+
+            let tableObj = document.getElementById("data-form");
+
+            rspData.data.forEach(element => {
+                let row = tableObj.insertRow(element.index);
+                row.insertCell(0).innerHTML = element.id;
+                // row.insertCell(1).innerHTML = element.file_name;
+                var cell1 = row.insertCell(1);
+                cell1.innerHTML = element.file_name;
+                cell1.title = element.file_name;
+                row.insertCell(2).innerHTML = element.before_size;
+                row.insertCell(3).innerHTML = element.after_size;
+                row.insertCell(4).innerHTML = element.compress_ratio;
+                row.insertCell(5).innerHTML = element.start_time;
+                row.insertCell(6).innerHTML = element.finish_time;
+                row.insertCell(7).innerHTML = element.duration;
+            });
+        }
+    };
+
+    function deleteAllRow(tableId) {
+        var tb = document.getElementById(tableId);
+        var rowNum = tb.rows.length;
+        for (i = 1; i < rowNum; i++) {
+            tb.deleteRow(i);
+            rowNum = rowNum - 1;
+            i = i - 1;
+        }
+    }
+
+    function prv() {
+        if (page >= 1) {
+            page = page - 1;
+            sendRequest(page);
+        }
+    }
+
+    function next() {
+        if (page < maxPage) {
+            page = page + 1;
+            sendRequest(page);
+        }
+    }
+
+    function sendRequest(p) {
+        let url = '/api/result?page_size=20&page=' + p + "&desc=1";
+        Http.open("GET", url);
+        Http.send();
+    }
+
+</script>
+
+<html lang="zh-cn">
+<link href="https://cdn.bootcss.com/twitter-bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    td {
+        width: 100%;
+        word-break: keep-all;
+        /* 不换行 */
+        white-space: nowrap;
+        /* 不换行 */
+        overflow: hidden;
+        /* 内容超出宽度时隐藏超出部分的内容 */
+        text-overflow: ellipsis;
+        /* 当对象内文本溢出时显示省略标记(...) ；需与overflow:hidden;一起使用*/
+        -o-text-overflow: ellipsis;
+        -icab-text-overflow: ellipsis;
+        -khtml-text-overflow: ellipsis;
+        -moz-text-overflow: ellipsis;
+        -webkit-text-overflow: ellipsis;
+    }
+</style>
+
+<body>
+    <div class="container">
+        <table id="data-form" border="1" class="table table-bordered" style='table-layout:fixed;'>
+            <tr>
+                <th style="width:5%;">ID</th>
+                <th style="width:35%;">路径</th>
+                <th>原始大小</th>
+                <th>压缩后大小</th>
+                <th>压缩率</th>
+                <th style="width:15%;">开始时间</th>
+                <th style="width:15%;">结束时间</th>
+                <th style="width:8%;">使用时间</th>
+            </tr>
+        </table>
+        <div class="form-inline pull-right">
+            <div id="page" style="display: inline;"></div>
+            <button id="remove-all" class="btn btn-default" onclick="prv()">上一页</button>
+            <button id="remove-all" class="btn btn-default" onclick="next()">下一页</button>
+        </div>
+    </div>
+</body>
+
+</html>
