@@ -9,3 +9,7 @@ linux-build:
 .PHONY: clean
 clean:
 	@rm -rf bin/
+
+.PHONY: generate
+generate:
+	@go generate ./src/...

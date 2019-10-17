@@ -28,6 +28,7 @@ type Result struct {
 }
 
 func (r *Result) MarshalJSON() ([]byte, error) {
+	dateFormat := "2006-01-02 15:04:05"
 	s := struct {
 		ID            int    `json:"id"`
 		FileName      string `json:"file_name"`
@@ -43,8 +44,8 @@ func (r *Result) MarshalJSON() ([]byte, error) {
 		BeforeSize:    utils.HumanSize(uint64(r.BeforeSize)),
 		AfterSize:     utils.HumanSize(uint64(r.AfterSize)),
 		CompressRatio: fmt.Sprintf("%.2f%%", float64(r.AfterSize)/float64(r.BeforeSize)*100),
-		StartTime:     r.StartTime.String(),
-		FinishTime:    r.FinishTime.String(),
+		StartTime:     r.StartTime.Format(dateFormat),
+		FinishTime:    r.FinishTime.Format(dateFormat),
 		Duration:      r.FinishTime.Sub(r.StartTime).String(),
 	}
 	return json.Marshal(s)
