@@ -6,6 +6,10 @@ build:
 linux-build:
 	@docker run --rm -v '${PWD}:/tmp/Tyrant' golang /tmp/Tyrant/src/hack/build.sh /tmp/Tyrant
 
+.PHONY: docker
+docker:
+	docker build -t 'chigusa/tyrant' .
+
 .PHONY: clean
 clean:
 	@rm -rf bin/

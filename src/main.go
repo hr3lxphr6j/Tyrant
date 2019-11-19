@@ -22,6 +22,8 @@ func init() {
 }
 
 func main() {
+	log.Printf("DB: %s", dbPath)
+	log.Printf("Bind: %s", bind)
 	svc, err := impl.New(dbPath)
 	if err != nil {
 		log.Fatalf("failed to init service: %v", err)
